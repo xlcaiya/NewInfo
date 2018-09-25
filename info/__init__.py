@@ -28,9 +28,13 @@ def create_app(config_name):
     # 设置 session 保存位置
     Session(app)
 
-    # 注册蓝图
+    # 注册蓝图 --> 主页
     from info.modules.index import index_blu
     app.register_blueprint(index_blu)
+
+    # 注册蓝图 --> 验证码页面
+    from info.modules.passport import passport_blu
+    app.register_blueprint(passport_blu)
 
     import info.models
 
