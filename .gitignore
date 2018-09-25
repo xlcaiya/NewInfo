@@ -4,4 +4,5 @@ __pycache__/config.cpython-35.pyc
 # info/modules/__init__.py
 # info/modules/index/__init__.py
 logs/log*
+migrations/
 

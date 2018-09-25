@@ -32,6 +32,7 @@ def create_app(config_name):
     from info.modules.index import index_blu
     app.register_blueprint(index_blu)
 
+    import info.models
 
     return app
 
