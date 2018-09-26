@@ -31,21 +31,13 @@ $(function () {
         $("#register-password-err").hide();
     });
 
-    // 点击输入框，提示文字上移
-    $('.form_group').on('click focusin', function () {
-        $(this).children('.input_tip').animate({
-            'top': -5,
-            'font-size': 12
-        }, 'fast').siblings('input').focus().parent().addClass('hotline');
+    $('.form_group').on('click',function(){
+        $(this).children('input').focus()
     })
 
-    // 输入框失去焦点，如果输入框为空，则提示文字下移
-    $('.form_group input').on('blur focusout', function () {
-        $(this).parent().removeClass('hotline');
-        var val = $(this).val();
-        if (val == '') {
-            $(this).siblings('.input_tip').animate({'top': 22, 'font-size': 14}, 'fast');
-        }
+    $('.form_group input').on('focusin',function(){
+        $(this).siblings('.input_tip').animate({'top':-5,'font-size':12},'fast')
+        $(this).parent().addClass('hotline');
     })
 
 
@@ -226,45 +218,56 @@ function sendSMSCode() {
     }
 
     // 发送短信验证码
-    // 包装数据
-    var param = {
+
+    var params = {
         "mobile": mobile,
-        "img_code": imageCode,
-        "img_code_id": imageCodeId
+        "image_code": imageCode,
+        "image_code_id": imageCodeId
     }
-    // 发送ajax请求
-    $.ajax({
-        url: "/passport/get_sms_code",
-        type: "POST",
-        data: JSON.stringify(param),  // 将js对象转为json字符串
+ $.ajax({
+        // 请求地址
+        url: "/passport/smscode",
+        // 请求方式
+        method: "POST",
+        // 请求内容
+        data: JSON.stringify(params),
+        // 请求内容的数据类型
         contentType: "application/json",
+        // 响应数据的格式
+        dataType: "json",
         success: function (resp) {
-            if (resp.errno == "0") {  // 注册成功,显示倒计时
-
-                countDown()
-
+            if (resp.errno == "0") {
+                // 倒计时60秒，60秒后允许用户再次点击发送短信验证码的按钮
+                var num = 60;
+                // 设置一个计时器
+                var t = setInterval(function () {
+                    if (num == 1) {
+                        // 如果计时器到最后, 清除计时器对象
+                        clearInterval(t);
+                        // 将点击获取验证码的按钮展示的文本回复成原始文本
+                        $(".get_code").html("获取验证码");
+                        // 将点击按钮的onclick事件函数恢复回去
+                        $(".get_code").attr("onclick", "sendSMSCode();");
+                    } else {
+                        num -= 1;
+                        // 展示倒计时信息
+                        $(".get_code").html(num + "秒");
+                    }
+                }, 1000)
             } else {
-                alert(resp.errmsg)  // 显示错误提示
-                $(".get_code").attr("onclick", "sendSMSCode();");  // 恢复点击
+                // 表示后端出现了错误，可以将错误信息展示到前端页面中
+                $("#register-sms-code-err").html(resp.errmsg);
+                $("#register-sms-code-err").show();
+                // 将点击按钮的onclick事件函数恢复回去
+                $(".get_code").attr("onclick", "sendSMSCode();");
+                // 如果错误码是4004，代表验证码错误，重新生成验证码
+                if (resp.errno == "4004") {
+                    generateImageCode()
+                }
             }
         }
     })
 }
-
-// 短信验证码倒计时
-function countDown() {
-    var num = 60
-    setInterval(function () {
-        if (num == 1) {  // 倒计时结束
-            $(".get_code").html("点击获取验证码")  // 显示文字
-            $(".get_code").attr("onclick", "sendSMSCode();");  // 恢复点击
-        } else {
-            num -= 1  // 倒计时
-            $(".get_code").html(num + "秒")  //显示文字
-        }
-    }, 1000)  // 每1000毫秒执行一次
-}
-
 
 // 调用该函数模拟点击左侧按钮
 function fnChangeMenu(n) {
